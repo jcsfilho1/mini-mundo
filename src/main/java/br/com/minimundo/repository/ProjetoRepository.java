@@ -1,6 +1,6 @@
-package com.exemplo.minimundo.repository;
+package br.com.minimundo.repository;
 
-import com.exemplo.minimundo.entity.Projeto;
+import br.com.minimundo.entity.Projeto;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

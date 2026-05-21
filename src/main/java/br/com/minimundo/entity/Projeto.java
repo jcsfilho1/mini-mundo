@@ -1,4 +1,4 @@
-package com.exemplo.minimundo.entity;
+package br.com.minimundo.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -95,7 +95,7 @@ public class Projeto {
     }
 
     @Override
-    public hashCode() {
+    public int hashCode() {
         return Objects.hashCode(id);
     }
 }

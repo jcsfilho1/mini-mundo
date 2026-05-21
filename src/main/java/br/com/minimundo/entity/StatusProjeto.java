@@ -1,6 +1,6 @@
 package br.com.minimundo.entity;
 
-public class StatusProjeto {
+public enum StatusProjeto {
     ATIVO,
-    INATIVO;
+    INATIVO
 }
