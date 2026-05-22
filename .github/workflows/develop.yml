@@ -1,0 +1,29 @@
+name: CI/CD - Develop Auto Deploy
+
+on:
+  push:
+    branches:
+      - develop # Dispara o workflow para qualquer push na branch develop
+jobs:
+  build-and-run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17' 
+          distribution: 'temurin'
+
+      - name: Build do projeto com Maven
+        #  este comando gera o .jar
+        run: mvn clean package -DskipTests
+
+      - name: Build da Imagem Docker
+        # criar a imagem
+        run: docker build -t seu-usuario/mini-mundo:dev .
+
+      - name: Status Final
+        run: echo "Imagem gerada com sucesso! O Spring Boot está pronto para subir."
