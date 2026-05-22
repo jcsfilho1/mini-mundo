@@ -1,28 +1,147 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard</title>
-
+    <title>Dashboard - Mini Mundo</title>
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-<div class="container">
+    <header class="navbar">
+        <h2>Mini Mundo - Gestão de Projetos</h2>
+        <div class="user-menu">
+            <span id="mensagem">Carregando...</span>
+            <button onclick="logout()" class="btn-logout">Sair</button>
+        </div>
+    </header>
 
-    <h2>Dashboard</h2>
+    <div class="dashboard-container">
+        
+        <aside class="sidebar-projetos">
+            <div class="section-header">
+                <h3>Meus Projetos</h3>
+                <button onclick="abrirModalProjeto()" class="btn-primary">+ Novo Projeto</button>
+            </div>
+            
+            <div class="filtros-projetos-container" style="padding: 10px 0; display: flex; flex-direction: column; gap: 8px;">
+                <input type="text" id="busca-projeto-nome" oninput="filtrarProjetos()" placeholder="🔍 Pesquisar projeto por nome..." style="width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;">
+                
+                <select id="busca-projeto-status" onchange="filtrarProjetos()" style="width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; background-color: white;">
+                    <option value="TODOS">📋 Todos os Status</option>
+                    <option value="ATIVO">ATIVO</option>
+                    <option value="INATIVO">INATIVO</option>
+                </select>
+            </div>
+            <div id="lista-projetos" class="cards-container">
+            </div>
+        </aside>
 
-    <p id="mensagem"></p>
+        <main class="main-tarefas">
+            <div class="section-header">
+                <h3>Tarefas do Projeto: <span id="nome-projeto-selecionado">Selecione um projeto</span></h3>
+                <div class="acoes-projeto-bloco">
+                    <button id="btn-editar-projeto" onclick="abrirModalEditarProjeto()" class="btn-warn" disabled>Editar Projeto</button>
+                    <button id="btn-excluir-projeto" onclick="executarExclusaoProjeto()" class="btn-danger" disabled>Excluir Projeto</button>
+                    <button id="btn-nova-tarefa" onclick="abrirModalTarefa()" class="btn-primary" disabled>+ Nova Tarefa</button>
+                </div>
+            </div>
 
-    <button onclick="logout()">
-        Sair
-    </button>
+            <div id="progresso-container" style="display: none; margin: 10px 0; background: #eee; border-radius: 8px; overflow: hidden; height: 20px; position: relative;">
+                <div id="barra-progresso" style="background: #2ecc71; width: 0%; height: 100%; transition: width 0.3s ease;"></div>
+                <span id="texto-progresso" style="position: absolute; width: 100%; text-align: center; top: 0; font-size: 12px; font-weight: bold; color: #333; line-height: 20px;">Progresso: 0%</span>
+            </div>
 
-</div>
+            <div class="filtros-tarefas" style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; align-items: center;">
+                <div style="flex: 1; min-width: 200px;">
+                    <input type="text" id="busca-tarefa-descricao" oninput="filtrarTarefasEmMemoria()" placeholder="🔍 Pesquisar tarefa por descrição..." style="width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;">
+                </div>
+                <div>
+                    <label for="filtro-status">Filtrar por Status:</label>
+                    <select id="filtro-status" onchange="listarTarefas()" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; background-color: white;">
+                        <option value="TODAS">Todas</option>
+                        <option value="NAO_CONCLUIDA">Não Concluída</option>
+                        <option value="CONCLUIDA">Concluída</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="lista-tarefas" class="cards-container">
+                <p class="aviso-vazio">Clique em um projeto para carregar suas respectivas tarefas.</p>
+            </div>
+        </main>
+    </div>
 
-<script src="app.js"></script>
+    <div id="modal-projeto" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="fecharModalProjeto()">&times;</span>
+            <h3>Novo Projeto</h3>
+            <input type="text" id="proj-nome" placeholder="Nome do Projeto (Único)" required>
+            <textarea id="proj-descricao" placeholder="Descrição do Projeto"></textarea>
+            <input type="number" id="proj-orcamento" placeholder="Orçamento (R$)" step="0.01">
+            <button onclick="salvarProjeto()" class="btn-submit">Salvar Projeto</button>
+        </div>
+    </div>
 
+    <div id="modal-editar-projeto" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="fecharModalEditarProjeto()">&times;</span>
+            <h3>Editar Projeto</h3>
+            <input type="text" id="edit-proj-nome" placeholder="Nome do Projeto" required>
+            <textarea id="edit-proj-descricao" placeholder="Descrição do Projeto"></textarea>
+            <input type="number" id="edit-proj-orcamento" placeholder="Orçamento (R$)" step="0.01">
+            <label for="edit-proj-status">Status do Projeto:</label>
+            <select id="edit-proj-status">
+                <option value="ATIVO">Ativo</option>
+                <option value="INATIVO">Inativo</option>
+            </select>
+            <button onclick="salvarEdicaoProjeto()" class="btn-submit" style="background: #f39c12;">Salvar Alterações</button>
+        </div>
+    </div>
+
+    <div id="modal-tarefa" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="fecharModalTarefa()">&times;</span>
+            <h3>Nova Tarefa</h3>
+            <input type="text" id="tar-descricao" placeholder="Descrição da Tarefa (Obrigatório)" required>
+            <label>Data de Início (Opcional):</label>
+            <input type="date" id="tar-data-inicio">
+            <label>Data de Término (Opcional):</label>
+            <input type="date" id="tar-data-fim">
+            
+            <label for="tar-predecessora">Tarefa Predecessora (Opcional):</label>
+            <select id="tar-predecessora" style="width: 100%; padding: 8px; margin: 8px 0; box-sizing: border-box;">
+                <option value="">Nenhuma</option>
+            </select>
+            
+            <button onclick="salvarTarefa()" class="btn-submit">Salvar Tarefa</button>
+        </div>
+    </div>
+
+    <div id="modal-editar-tarefa" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="fecharModalEditarTarefa()">&times;</span>
+            <h3>Editar/Atualizar Tarefa</h3>
+            <input type="text" id="edit-tar-descricao" placeholder="Descrição da Tarefa (Obrigatório)" required>
+            <label>Data de Início (Opcional):</label>
+            <input type="date" id="edit-tar-data-inicio">
+            <label>Data de Término (Opcional):</label>
+            <input type="date" id="edit-tar-data-fim">
+            
+            <label for="edit-tar-status">Status:</label>
+            <select id="edit-tar-status" style="width: 100%; padding: 8px; margin: 8px 0; box-sizing: border-box;">
+                <option value="NAO_CONCLUIDA">Não Concluída</option>
+                <option value="CONCLUIDA">Concluída</option>
+            </select>
+
+            <label for="edit-tar-predecessora">Tarefa Predecessora (Opcional):</label>
+            <select id="edit-tar-predecessora" style="width: 100%; padding: 8px; margin: 8px 0; box-sizing: border-box;">
+                <option value="">Nenhuma</option>
+            </select>
+            
+            <button onclick="salvarEdicaoTarefa()" class="btn-submit" style="background: #f39c12;">Salvar Alterações</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
 </body>
 </html>

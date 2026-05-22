@@ -1,6 +1,6 @@
 package br.com.minimundo.entity;
 
-
+import com.fasterxml.jackson.annotation.JsonProperty; // Importante para bater com o JS
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -31,9 +31,10 @@ public class Tarefa {
     @Column(name = "data_fim")
     private LocalDate dataFim;
 
-    // Auto-relacionamento Opcional: Uma tarefa pode ter uma predecessora
+    // Auto-relacionamento Opcional: Mapeia para o banco, mas avisa ao Jackson que no JSON se chama "predecessora"
     @ManyToOne
     @JoinColumn(name = "tarefa_predecessora_id")
+    @JsonProperty("predecessora") 
     private Tarefa tarefaPredecessora;
 
     @NotNull(message = "O status da tarefa é obrigatório.")
@@ -45,10 +46,10 @@ public class Tarefa {
     public Tarefa() {
     }
 
-    // Construtor completo
-    public Tarefa(Long id, String description, Projeto projeto, LocalDate dataInicio, LocalDate dataFim, Tarefa tarefaPredecessora, StatusTarefa status) {
+    // Construtor completo CORRIGIDO (parâmetro alterado para 'descricao')
+    public Tarefa(Long id, String descricao, Projeto projeto, LocalDate dataInicio, LocalDate dataFim, Tarefa tarefaPredecessora, StatusTarefa status) {
         this.id = id;
-        this.descricao = description;
+        this.descricao = descricao;
         this.projeto = projeto;
         this.dataInicio = dataInicio;
         this.dataFim = dataFim;

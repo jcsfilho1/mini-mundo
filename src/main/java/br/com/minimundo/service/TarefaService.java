@@ -24,12 +24,10 @@ public class TarefaService {
     // 1. LISTAR TAREFAS DE UM PROJETO (Com filtro opcional por Status)
     @Transactional(readOnly = true)
     public List<Tarefa> listarPorProjeto(Long projetoId, StatusTarefa status) {
-        // Valida se o projeto existe primeiro
         if (!projetoRepository.existsById(projetoId)) {
             throw new IllegalArgumentException("Projeto não encontrado com o ID: " + projetoId);
         }
         
-        // Se o status for enviado, filtra por ele. Caso contrário, traz todas do projeto.
         if (status != null) {
             return tarefaRepository.findByProjetoIdAndStatus(projetoId, status);
         }
@@ -61,8 +59,6 @@ public class TarefaService {
         tarefaExistente.setDataFim(tarefaAtualizada.getDataFim());
         tarefaExistente.setStatus(tarefaAtualizada.getStatus());
         tarefaExistente.setTarefaPredecessora(tarefaAtualizada.getTarefaPredecessora());
-        
-        // Garante que o projeto associado não mude drasticamente sem validação
         tarefaExistente.setProjeto(tarefaAtualizada.getProjeto());
 
         validarRegrasTarefa(tarefaExistente);
@@ -76,7 +72,6 @@ public class TarefaService {
             throw new IllegalArgumentException("Tarefa não encontrada com o ID: " + id);
         }
 
-        // Regra de Negócio 4: A exclusão só é permitida se ela não for predecessora de outra
         if (tarefaRepository.existsByTarefaPredecessoraId(id)) {
             throw new IllegalStateException("Não é possível excluir esta tarefa pois ela é predecessora de outra tarefa ativa.");
         }
@@ -84,7 +79,7 @@ public class TarefaService {
         tarefaRepository.deleteById(id);
     }
 
-    // MÉTODO AUXILIAR PARA VALIDAÇÕES DAS REGRAS DE NEGÓCIO
+    // MÉTODO AUXILIAR PARA VALIDAÇÕES DAS REGRAS DE NEGÓCIO AJUSTADO
     private void validarRegrasTarefa(Tarefa tarefa) {
         // Regra 2: Validar se o projeto associado realmente existe
         if (tarefa.getProjeto() == null || tarefa.getProjeto().getId() == null) {
@@ -101,11 +96,26 @@ public class TarefaService {
             }
         }
 
-        // Evitar auto-referência na predecessora (uma tarefa não pode depender dela mesma)
-        if (tarefa.getTarefaPredecessora() != null && tarefa.getId() != null) {
-            if (tarefa.getTarefaPredecessora().getId().equals(tarefa.getId())) {
+        // Validações da Tarefa Predecessora
+        if (tarefa.getTarefaPredecessora() != null && tarefa.getTarefaPredecessora().getId() != null) {
+            Long predId = tarefa.getTarefaPredecessora().getId();
+            
+            // Evitar auto-referência
+            if (tarefa.getId() != null && predId.equals(tarefa.getId())) {
                 throw new IllegalArgumentException("Uma tarefa não pode ser predecessora de si mesma.");
             }
+
+            // Busca a predecessora real no banco para validar integridade
+            Tarefa predecessoraBanco = tarefaRepository.findById(predId)
+                    .orElseThrow(() -> new IllegalArgumentException("Tarefa predecessora informada não existe."));
+
+            // 🛡️ TRAVA DE SEGURANÇA: Garante que a predecessora pertence ao MESMO projeto
+            if (!predecessoraBanco.getProjeto().getId().equals(tarefa.getProjeto().getId())) {
+                throw new IllegalArgumentException("A tarefa predecessora deve pertencer ao mesmo projeto.");
+            }
+            
+            // Atualiza a referência com o objeto completo carregado do banco
+            tarefa.setTarefaPredecessora(predecessoraBanco);
         }
     }
 }

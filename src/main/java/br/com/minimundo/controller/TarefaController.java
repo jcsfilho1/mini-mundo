@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@CrossOrigin // Permite que o seu front-end acesse os endpoints sem erros de CORS
 @RestController
 @RequestMapping("/api/tarefas")
 public class TarefaController {
@@ -29,6 +30,8 @@ public class TarefaController {
             return ResponseEntity.ok(tarefas);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro interno ao listar tarefas.");
         }
     }
 
@@ -50,6 +53,8 @@ public class TarefaController {
             return ResponseEntity.status(HttpStatus.CREATED).body(novaTarefa);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao processar criação da tarefa: " + e.getMessage());
         }
     }
 
@@ -62,6 +67,8 @@ public class TarefaController {
             return ResponseEntity.ok(tarefaEditada);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao atualizar tarefa: " + e.getMessage());
         }
     }
 
@@ -75,6 +82,8 @@ public class TarefaController {
         } catch (IllegalArgumentException | IllegalStateException e) {
             // Captura tanto erro de ID inexistente quanto violação da regra de predecessora
             return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao tentar excluir a tarefa.");
         }
     }
 }
